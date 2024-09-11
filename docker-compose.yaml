@@ -1,0 +1,119 @@
+version: '3.7'
+
+services:
+  geth-bootnode:
+    hostname: geth-bootnode
+    env_file:
+      - .env
+    image: geth-client
+    build:
+      context: ./node-image
+      args:
+        - ACCOUNT_PASSWORD=${ACCOUNT_PASSWORD}
+    command:
+      --nodekeyhex="31ab7e16a034fe84b1efa2b855f696942c25be6ef9f635e6c034f7fc9abd0e2e"
+      --nodiscover
+      --metrics
+      --metrics.addr="0.0.0.0"
+      --ipcdisable
+      --networkid=${NETWORK_ID}
+      --netrestrict="172.16.254.0/28"
+    networks:
+      eth-network:
+
+  geth-rpc-endpoint:
+    hostname: geth-rpc-endpoint
+    env_file:
+      - .env
+    image: geth-client
+    depends_on:
+      - geth-bootnode    
+    command:
+      --bootnodes="enode://69f8f97134fd27b8071966c800cc69d8dd340b6d6f630a114da73ec208852260beb711e08c0bd3ebe921a7b5384ad8235015467abd1b3192a3b0f8f1457b12b8@geth-bootnode:30303"
+      --allow-insecure-unlock
+      --http
+      --http.addr="0.0.0.0"
+      --http.api="eth,web3,net,admin,personal"
+      --http.corsdomain="*"
+      --networkid=${NETWORK_ID}
+      --netrestrict="172.16.254.0/28"
+    ports:
+      - "8545:8545"
+    networks:
+      eth-network:
+
+  geth-miner-1:
+    hostname: geth-miner
+    env_file:
+      - .env
+    image: geth-client
+    depends_on:
+      - geth-bootnode
+    command:
+      --bootnodes="enode://69f8f97134fd27b8071966c800cc69d8dd340b6d6f630a114da73ec208852260beb711e08c0bd3ebe921a7b5384ad8235015467abd1b3192a3b0f8f1457b12b8@geth-bootnode:30303"
+      --mine
+      --miner.threads=1
+      --networkid=${NETWORK_ID}
+      --netrestrict="172.16.254.0/28"
+      # --metrics
+      # --metrics.addr="0.0.0.0"
+    networks:
+      eth-network:
+  
+  # geth-miner-2:
+  #   hostname: geth-miner-2
+  #   env_file:
+  #     - .env
+  #   image: geth-client
+  #   depends_on:
+  #     - geth-bootnode
+  #   command:
+  #     --bootnodes="enode://69f8f97134fd27b8071966c800cc69d8dd340b6d6f630a114da73ec208852260beb711e08c0bd3ebe921a7b5384ad8235015467abd1b3192a3b0f8f1457b12b8@geth-bootnode:30304"
+  #     --mine
+  #     --miner.threads=1
+  #     --networkid=${NETWORK_ID}
+  #     --netrestrict="172.16.254.0/28"
+  #     # --metrics
+  #     # --metrics.addr="0.0.0.0"
+  #   networks:
+  #     eth-network:
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - 9090:9090
+    restart: unless-stopped
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prom_data:/prometheus
+    networks:
+      eth-network:
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=grafana
+    volumes:
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/dashboard.yml:/etc/grafana/provisioning/dashboards/main.yml
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      eth-network:
+
+volumes:
+  prom_data:
+ 
+networks:
+  eth-network:
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 172.16.254.0/28
