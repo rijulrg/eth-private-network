@@ -45,11 +45,11 @@ bootnode -nodekeyhex <nodekeyhex-from-file> -writeaddress
 ## Docker Compose Configuration
 The `docker-compose.yaml` file defines the services required for the private Ethereum network:
 
-geth-bootnode: Configured with a static node key, it serves as the entry point for other nodes to connect.
-geth-rpc-endpoint: Exposes the Ethereum JSON-RPC interface on port `8545`.
-geth-miner-1: A single-threaded mining node.
-Prometheus: Exposes its interface on port `9090` and collects metrics from the Geth nodes.
-Grafana: Visualizes metrics from Prometheus, accessible on port `3000`.
+- geth-bootnode: Configured with a static node key, it serves as the entry point for other nodes to connect.
+- geth-rpc-endpoint: Exposes the Ethereum JSON-RPC interface on port `8545`.
+- geth-miner-1: A single-threaded mining node.
+= Prometheus: Exposes its interface on port `9090` and collects metrics from the Geth nodes.
+= Grafana: Visualizes metrics from Prometheus, accessible on port `3000`.
 
 ## Monitoring Setup
 - Prometheus: Configured to collect metrics from the Ethereum nodes using the `prometheus.yml` file.
