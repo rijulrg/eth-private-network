@@ -79,6 +79,25 @@ docker-compose up --build
 - The `NETWORK_ID` and `ACCOUNT_PASSWORD` are passed through an `.env` file. Make sure to create this file before running the network.
 - The subnet for the Ethereum network is restricted to `172.16.254.0/28` for security purposes.
 
+## Terraform Configuration (IaC Approach):
+
+You can also set  up the same network using terraform:
+1. Initialize the Project: Run the following command to initialize Terraform, which will download the required provider plugins:
+```bash
+terraform init
+```
+
+2. Plan the Deployment: Before applying the changes, it's recommended to run a plan to ensure that the configuration is correct:
+```bash
+terraform plan -var="ACCOUNT_PASSWORD=<your_password>" -var="NETWORK_ID=<your_network_id>"
+```
+This command will show the resources that Terraform will create.
+
+3. Apply the Changes: After verifying the plan, you can apply the configuration to create the Docker containers and the network:
+```bash
+terraform apply -var="ACCOUNT_PASSWORD=<your_password>" -var="NETWORK_ID=<your_net
+```
+
 ## Customization
 You can extend or modify the network by:
 
